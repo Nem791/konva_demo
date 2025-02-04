@@ -1,0 +1,41 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #000;
+}
+.container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+.background {
+    position: absolute;
+    width: 120vw;
+    height: 120vh;
+    background: repeating-linear-gradient(
+        45deg,
+        #222 0px,
+        #222 25px,
+        #555 25px,
+        #555 50px
+    );
+}
+.foreground {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 50px;
+}
+.box {
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.6);
+    text-align: center;
+    line-height: 100px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+}

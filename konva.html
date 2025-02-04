@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://unpkg.com/konva@9.3.18/konva.min.js"></script>
+    <meta charset="utf-8" />
+    <title>Konva Canvas Scrolling Drag Demo</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #f0f0f0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="container"></div>
+    <script>
+      var width = window.innerWidth;
+      var height = window.innerHeight;
+      var friction = 0.95; // Controls deceleration speed
+      var velocity = { x: 0, y: 0 };
+      var isDragging = false;
+      var animationFrame;
+
+      // Define the canvas size limits
+      var WIDTH = 3000;
+      var HEIGHT = 3000;
+
+      var stage = new Konva.Stage({
+        container: "container",
+        width: width,
+        height: height,
+        draggable: true,
+        dragBoundFunc: function (pos) {
+          var minX = -WIDTH + width;
+          var minY = -HEIGHT + height;
+          var maxX = 0;
+          var maxY = 0;
+
+          return {
+            x: Math.max(minX, Math.min(pos.x, maxX)),
+            y: Math.max(minY, Math.min(pos.y, maxY)),
+          };
+        },
+      });
+
+      var layer = new Konva.Layer();
+      stage.add(layer);
+
+      // Generate random nodes
+      var NUMBER = 200;
+      function generateNode() {
+        return new Konva.Circle({
+          x: WIDTH * Math.random(),
+          y: HEIGHT * Math.random(),
+          radius: 50,
+          fill: "red",
+          stroke: "black",
+        });
+      }
+
+      for (var i = 0; i < NUMBER; i++) {
+        layer.add(generateNode());
+      }
+
+      // Track movement velocity
+      var lastPos = { x: stage.x(), y: stage.y() };
+      stage.on("dragmove", function () {
+        if (!isDragging) return;
+        velocity.x = stage.x() - lastPos.x;
+        velocity.y = stage.y() - lastPos.y;
+        lastPos = { x: stage.x(), y: stage.y() };
+      });
+
+      // Start deceleration on drag end
+      stage.on("dragend", function () {
+        isDragging = false;
+        cancelAnimationFrame(animationFrame);
+        animateDeceleration();
+      });
+
+      stage.on("dragstart", function () {
+        isDragging = true;
+        velocity.x = 0;
+        velocity.y = 0;
+        cancelAnimationFrame(animationFrame);
+      });
+
+      function animateDeceleration() {
+        if (Math.abs(velocity.x) < 0.1 && Math.abs(velocity.y) < 0.1) return; // Stop when velocity is low
+
+        velocity.x *= friction;
+        velocity.y *= friction;
+
+        var newX = stage.x() + velocity.x;
+        var newY = stage.y() + velocity.y;
+
+        // Keep within bounds
+        var minX = -WIDTH + width;
+        var minY = -HEIGHT + height;
+        var maxX = 0;
+        var maxY = 0;
+
+        newX = Math.max(minX, Math.min(newX, maxX));
+        newY = Math.max(minY, Math.min(newY, maxY));
+
+        stage.position({ x: newX, y: newY });
+        stage.batchDraw();
+
+        animationFrame = requestAnimationFrame(animateDeceleration);
+      }
+    </script>
+  </body>
+</html>

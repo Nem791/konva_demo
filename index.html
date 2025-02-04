@@ -1,0 +1,90 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallax Test</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="container">
+    <div class="background"></div>
+    <div class="foreground">
+        <div class="box">1</div>
+        <div class="box">2</div>
+        <div class="box">3</div>
+    </div>
+    </div>
+</body>
+
+
+<script>
+    let foreground = document.querySelector(".foreground");
+    let background = document.querySelector(".background");
+
+    let isDragging = false;
+    let startX, startY, offsetX = 0, offsetY = 0;
+    let velocityX = 0, velocityY = 0;
+    let friction = 0.9; 
+    let parallaxVelocityScale = 0.4 // velocity scale between foreground and background
+    let maxVelocity = 20; // velocity limit
+    let inertiaRequestId = null; // need this to cancel inertia animation when user tries to drag while the foreground is still moving
+
+
+    function startDrag(e) {
+        isDragging = true;
+        startX = e.clientX - offsetX;
+        startY = e.clientY - offsetY;
+        
+        velocityX = 0;
+        velocityY = 0;
+      
+        // cancel inertia animation
+        if (inertiaRequestId !== null) {
+            cancelAnimationFrame(inertiaRequestId);
+            inertiaRequestId = null; 
+        }
+      
+    }
+
+    function drag(e) {
+        if (!isDragging) return;
+        let x = e.clientX - startX;
+        let y = e.clientY - startY;
+
+        velocityX = x - offsetX;
+        velocityY = y - offsetY;
+
+        // clamp velocity to prevent flying away
+        velocityX = Math.min(velocityX, maxVelocity);
+        velocityY = Math.min(velocityY, maxVelocity);
+
+        offsetX = x;
+        offsetY = y;
+
+        foreground.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        background.style.transform = `translate(${offsetX * parallaxVelocityScale}px, ${offsetY * parallaxVelocityScale}px)`;
+    }
+
+    function stopDrag() {
+        isDragging = false;
+        requestAnimationFrame(applyInertia);
+    }
+
+    function applyInertia() {
+        if (Math.abs(velocityX) < 0.1 && Math.abs(velocityY) < 0.1) return;
+
+        offsetX += velocityX;
+        offsetY += velocityY;
+
+        velocityX *= friction;
+        velocityY *= friction;
+
+        foreground.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        background.style.transform = `translate(${offsetX * parallaxVelocityScale}px, ${offsetY * parallaxVelocityScale}px)`;
+
+        inertiaRequestId = requestAnimationFrame(applyInertia)
+    }
+
+    document.addEventListener("mousedown", startDrag);
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("mouseup", stopDrag);
+</script>
