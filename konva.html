@@ -34,8 +34,8 @@
         height: height,
         draggable: true,
         dragBoundFunc: function (pos) {
-          var minX = -WIDTH + width;
-          var minY = -HEIGHT + height;
+          var minX = -WIDTH * stage.scaleX() + width;
+          var minY = -HEIGHT * stage.scaleY() + height;
           var maxX = 0;
           var maxY = 0;
 
@@ -98,8 +98,8 @@
         var newY = stage.y() + velocity.y;
 
         // Keep within bounds
-        var minX = -WIDTH + width;
-        var minY = -HEIGHT + height;
+        var minX = -WIDTH * stage.scaleX() + width;
+        var minY = -HEIGHT * stage.scaleY() + height;
         var maxX = 0;
         var maxY = 0;
 
@@ -111,6 +111,52 @@
 
         animationFrame = requestAnimationFrame(animateDeceleration);
       }
+
+      // Zoom functionality
+      var scaleBy = 1.05;
+      stage.on("wheel", (e) => {
+        e.evt.preventDefault();
+
+        var oldScale = stage.scaleX();
+        var pointer = stage.getPointerPosition();
+
+        var mousePointTo = {
+          x: (pointer.x - stage.x()) / oldScale,
+          y: (pointer.y - stage.y()) / oldScale,
+        };
+
+        // Determine zoom direction
+        let direction = e.evt.deltaY > 0 ? 1 : -1;
+        if (e.evt.ctrlKey) {
+          direction = -direction;
+        }
+
+        var newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+        // Limit zoom scale
+        newScale = Math.max(0.5, Math.min(newScale, 3));
+
+        stage.scale({ x: newScale, y: newScale });
+
+        var newPos = {
+          x: pointer.x - mousePointTo.x * newScale,
+          y: pointer.y - mousePointTo.y * newScale,
+        };
+        stage.position(newPos);
+
+        // Ensure bounds are respected after zoom
+        var minX = -WIDTH * newScale + width;
+        var minY = -HEIGHT * newScale + height;
+        var maxX = 0;
+        var maxY = 0;
+
+        stage.position({
+          x: Math.max(minX, Math.min(newPos.x, maxX)),
+          y: Math.max(minY, Math.min(newPos.y, maxY)),
+        });
+
+        stage.batchDraw();
+      });
     </script>
   </body>
 </html>
